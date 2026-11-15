@@ -1,0 +1,9 @@
+
+# Terraform generated files
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+*.tfplan
+
+# Generated archives
+*.zip
