@@ -3,7 +3,7 @@ provider "aws" {
 
   default_tags {
     tags = {
-      Project     = "eks-production-platform"
+      Project     = var.project_name
       Environment = var.environment
       ManagedBy   = "Terraform"
       Owner       = "DevOps"

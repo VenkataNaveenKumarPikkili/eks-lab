@@ -1,0 +1,74 @@
+name: Terraform
+
+on:
+  pull_request:
+    paths:
+      - "**/*.tf"
+      - "**/*.tfvars.example"
+      - ".github/workflows/terraform.yml"
+  push:
+    branches: [main]
+    paths:
+      - "**/*.tf"
+      - "**/*.tfvars.example"
+      - ".github/workflows/terraform.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Format and validate
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        root:
+          - environments/dev
+          - environments/qa
+          - environments/stage
+          - environments/prod
+          - bootstrap/s3-state
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.10.5
+      - name: Check formatting
+        if: ${{ matrix.root == 'environments/dev' }}
+        run: terraform fmt -check -recursive
+      - name: Initialize without backend
+        working-directory: ${{ matrix.root }}
+        run: terraform init -backend=false -input=false
+      - name: Validate configuration
+        working-directory: ${{ matrix.root }}
+        run: terraform validate
+
+  plan:
+    name: Dev plan (no apply)
+    runs-on: ubuntu-latest
+    needs: validate
+    if: ${{ vars.AWS_ROLE_ARN != '' && vars.AWS_REGION != '' && vars.TF_STATE_BUCKET != '' && vars.TF_STATE_KEY != '' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION }}
+      TF_STATE_BUCKET: ${{ vars.TF_STATE_BUCKET }}
+      TF_STATE_KEY: ${{ vars.TF_STATE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.10.5
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+      - name: Initialize remote state
+        working-directory: environments/dev
+        run: terraform init -input=false -backend-config="bucket=${TF_STATE_BUCKET}" -backend-config="key=${TF_STATE_KEY}" -backend-config="region=${AWS_REGION}" -backend-config="encrypt=true" -backend-config="use_lockfile=true"
+      - name: Create plan
+        working-directory: environments/dev
+        run: terraform plan -input=false -no-color -var-file=terraform.tfvars.example

@@ -1,4 +1,5 @@
-bucket       = "eks-platform-tfstate-358630709570-us-east-1"
+# Configure only after the state bucket exists and is secured.
+bucket       = "REPLACE_WITH_STATE_BUCKET_NAME"
 key          = "eks-platform/dev/terraform.tfstate"
 region       = "us-east-1"
 encrypt      = true

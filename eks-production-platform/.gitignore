@@ -1,0 +1,25 @@
+# Terraform working data and local state
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+crash.*.log
+
+# Environment-specific inputs and backend settings
+*.tfvars
+*.tfvars.json
+!*.tfvars.example
+backend.hcl
+
+# Local archives and editor files
+*.zip
+.vscode/
+.idea/
+*.swp
+
+# Terraform override files
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json

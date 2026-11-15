@@ -1,0 +1,8 @@
+# Example only. Check CIDR overlap, account, region, and current EKS version support.
+aws_region         = "us-east-1"
+environment        = "prod"
+project_name       = "eks-platform"
+cluster_version    = "REPLACE_WITH_SUPPORTED_EKS_VERSION"
+vpc_cidr           = "10.40.0.0/16"
+az_count           = 3
+single_nat_gateway = false
